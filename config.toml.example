@@ -1,0 +1,12 @@
+# Codex CLI configuration example
+# Copy this to ~/.codex/config.toml and edit the values
+
+[mcp_servers.discord]
+type = "stdio"
+command = "node"
+args = ["/path/to/discord-mcp-server/discord-mcp-server.js"]
+
+[mcp_servers.discord.env]
+DISCORD_BOT_TOKEN = "your-bot-token-here"
+DISCORD_CHANNEL_ID = "your-default-channel-id"
+DISCORD_GUILD_ID = "your-server-id"

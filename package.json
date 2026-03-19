@@ -1,0 +1,30 @@
+{
+  "name": "discord-mcp-server",
+  "version": "1.0.0",
+  "description": "Run Codex on Discord — one MCP server, 22 tools, full Discord control from your AI",
+  "type": "module",
+  "main": "discord-mcp-server.js",
+  "bin": {
+    "discord-mcp-server": "./discord-mcp-server.js"
+  },
+  "scripts": {
+    "start": "node discord-mcp-server.js",
+    "listen": "node discord-listener.js"
+  },
+  "keywords": [
+    "discord",
+    "mcp",
+    "codex",
+    "claude-code",
+    "ai",
+    "model-context-protocol"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "discord.js": "^14.18.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "discord": {
+      "command": "node",
+      "args": ["/path/to/discord-mcp-server/discord-mcp-server.js"],
+      "env": {
+        "DISCORD_BOT_TOKEN": "your-bot-token-here",
+        "DISCORD_CHANNEL_ID": "your-default-channel-id",
+        "DISCORD_GUILD_ID": "your-server-id"
+      }
+    }
+  }
+}
