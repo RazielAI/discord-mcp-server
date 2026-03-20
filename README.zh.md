@@ -1,4 +1,4 @@
-🇺🇸 [English](README.md) | 🇯🇵 [日本語](README.ja.md) | 🇨🇳 [中文](README.zh.md)
+🇺🇸 [English](README.en.md) | 🇯🇵 [日本語](README.md) | 🇨🇳 [中文](README.zh.md)
 
 # Discord MCP Server
 
