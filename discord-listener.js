@@ -54,7 +54,7 @@ if (!CODEX_CMD) {
     const which = execSync("where codex 2>nul || which codex 2>/dev/null", {
       encoding: "utf-8",
       timeout: 5000,
-    }).trim().split("\n")[0];
+    }).trim().split("\n")[0].trim().replace(/\r/g, "");
     if (which) CODEX_CMD = which;
   } catch (_) {}
 }
@@ -94,6 +94,7 @@ const discord = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMembers,
     GatewayIntentBits.MessageContent,
   ],
   partials: [Partials.Message, Partials.Channel],
@@ -128,14 +129,27 @@ discord.on("messageCreate", async (message) => {
     // Channel filter
     if (CHANNEL_ID && message.channel.id !== CHANNEL_ID) return;
 
-    // Only respond to mentions
+    // Only respond to mentions (user mention OR role mention)
     const content = message.content || "";
-    const mentioned =
+    const mentionedUser =
       message.mentions.users?.has(botId) ||
       content.includes(`<@${botId}>`) ||
       content.includes(`<@!${botId}>`);
 
-    if (!mentioned) return;
+    // Check if any of the bot's roles are mentioned
+    let mentionedRole = false;
+    if (!mentionedUser && message.mentions.roles?.size > 0) {
+      try {
+        const botMember = await message.guild.members.fetch(botId);
+        mentionedRole = message.mentions.roles.some(role =>
+          botMember.roles.cache.has(role.id)
+        );
+      } catch (e) {
+        console.log(`[listener] Could not fetch bot member: ${e.message}`);
+      }
+    }
+
+    if (!mentionedUser && !mentionedRole) return;
 
     const channelId = message.channel.id;
     const channelName = message.channel.name || channelId;
@@ -235,21 +249,20 @@ function runCodex(prompt) {
     const tmpFile = join(tmpdir(), `discord-listener-${Date.now()}.txt`);
     writeFileSync(tmpFile, prompt, "utf-8");
 
-    const args = [
-      ...CODEX_ARGS_PREFIX,
-      "exec",
-      "--sandbox",
-      "read-only",
-      "--skip-git-repo-check",
-      `Read the file at ${tmpFile} and reply with only the final message text. Do not use tools, do not read or modify files.`,
-    ];
+    const outFile = tmpFile + ".out";
 
-    const child = spawn(CODEX_CMD, args, {
+    // Use file-based prompt: write prompt to file, tell Codex to read it
+    const codexPrompt = `Read ${tmpFile} and follow its instructions. Output ONLY your reply text.`;
+    const cmdStr = `${CODEX_CMD} ${CODEX_ARGS_PREFIX.join(" ")} exec --sandbox read-only --skip-git-repo-check -o "${outFile}" "${codexPrompt.replace(/"/g, '\\"')}"`.trim();
+
+    console.log(`[listener] Running codex...`);
+
+    const child = spawn(cmdStr, [], {
       cwd: CODEX_WORKSPACE,
       timeout: CODEX_TIMEOUT_MS,
       stdio: ["ignore", "pipe", "pipe"],
       env: { ...process.env },
-      shell: process.platform === "win32",
+      shell: true,
     });
 
     let stdout = "";
@@ -262,12 +275,15 @@ function runCodex(prompt) {
     });
 
     child.on("close", (code) => {
-      cleanup(tmpFile);
+      // Try to read output file first (more reliable than stdout parsing)
+      let output = "";
+      try { output = readFileSync(outFile, "utf-8").trim(); } catch (_) {}
+      cleanup(outFile);
       if (code !== 0 && code !== 1 && code !== null) {
         reject(new Error(`Codex exit ${code}: ${stderr.slice(-300)}`));
         return;
       }
-      resolve(stdout.trim());
+      resolve(output || stdout.trim());
     });
 
     child.on("error", (err) => {
