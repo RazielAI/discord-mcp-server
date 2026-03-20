@@ -1,7 +1,7 @@
 {
   "name": "discord-mcp-server",
   "version": "1.0.0",
-  "description": "Run Codex on Discord — one MCP server, 22 tools, full Discord control from your AI",
+  "description": "Run Codex on Discord — one MCP server, 23 tools, full Discord control from your AI",
   "type": "module",
   "main": "discord-mcp-server.js",
   "bin": {
