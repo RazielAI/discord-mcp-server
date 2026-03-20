@@ -2,45 +2,87 @@
 
 # Discord MCP Server
 
-**Run Codex on Discord — mention your bot, get AI replies. Plus 23 MCP tools for full Discord control.**
+**Talk to AI through Discord. Mention your bot, get AI replies.**
 
-Mention your bot in Discord and Codex CLI responds automatically.  
-23 MCP tools let you read, send, search, and manage everything in Discord from your AI.
+Mention your bot in Discord and OpenAI's Codex CLI automatically responds.  
+Plus 23 MCP tools let any AI (Codex, Claude Code, Cursor, etc.) control Discord.
 
-## Two Modes
+---
 
-### 🗣️ Listener Mode (Auto-Reply)
-Mention the bot in Discord → Codex thinks and replies. Just chat.
+## What is this?
 
-```
-You:    @MyBot review this code
-MyBot:  (Codex thinks and responds)
-```
-
-### 🔧 MCP Tool Mode (23 Tools)
-Control Discord from Codex CLI — messages, threads, channels, members.
+A tool that runs AI (Codex CLI) on your PC and connects it to Discord.
 
 ```
-> Read #general on Discord
-> Create a thread in #dev and write meeting notes
-> Show me the server member list
+Discord: @MyBot what do you think about this?
+  ↓
+Codex thinks on your PC
+  ↓
+Auto-reply appears in Discord
 ```
 
-## Setup (5 minutes)
+## Two ways to use it (can run both at once)
 
-### 1. Create a Discord Bot
+### 🗣️ Listener Mode — Auto-reply when mentioned in Discord
+Mention the bot in Discord → Codex starts behind the scenes and replies automatically.  
+**You just watch Discord.** Keep the listener running and you don't even need to open Codex.
 
-1. Go to [Discord Developer Portal](https://discord.com/developers/applications) and create an application
-2. **Bot** tab → get your token (`Reset Token` → copy)
-3. **Bot** tab → enable:
-   - ✅ MESSAGE CONTENT INTENT
-   - ✅ SERVER MEMBERS INTENT (if you need member info)
-4. **OAuth2 → URL Generator** → select permissions:
-   - Scopes: `bot`
-   - Permissions: `Send Messages` / `Read Message History` / `Add Reactions` / `Manage Messages` / `Manage Channels` / `Manage Threads` / `Embed Links`
-5. Use the generated URL to invite the bot to your server
+### 🔧 MCP Tool Mode — Control Discord from AI
+Tell Codex or Claude Code "read #general" or "create a thread" and the AI operates Discord.  
+**You give instructions to the AI.**
 
-### 2. Install
+---
+
+## Requirements
+
+### 1. Paid services
+
+| Service | Cost | What for |
+|---------|------|----------|
+| [OpenAI API](https://platform.openai.com/) | Pay-as-you-go (~$5/mo) | The brain behind Codex CLI. GPT-4o generates responses |
+| **or** [Anthropic API](https://console.anthropic.com/) | Pay-as-you-go (~$5/mo) | The brain behind Claude Code. Claude generates responses |
+
+> 💡 This is **separate from** ChatGPT Plus ($20/mo) or Claude Pro ($20/mo) subscriptions.  
+> You need an API key from the developer console of each service.
+
+### 2. Software to install
+
+| Software | How to install | Verify |
+|----------|---------------|--------|
+| **Node.js** (v18+) | Download from [nodejs.org](https://nodejs.org/) | `node --version` |
+| **Codex CLI** | `npm install -g @openai/codex` | `codex --version` |
+
+> 💡 **Using Claude Code?** Install with `npm install -g @anthropic-ai/claude-code`.  
+> MCP Tool Mode works with any MCP-compatible AI (Codex, Claude Code, Cursor, Windsurf, Cline, etc.).
+
+### 3. Discord Bot (free)
+
+The bot is "AI's hands and feet" — it lets AI read and write in Discord.  
+**Follow the steps below — takes 5 minutes.**
+
+---
+
+## Setup (complete guide)
+
+### Step 1: Create a Discord Bot
+
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications) (log in with Discord)
+2. Click **"New Application"** → name it and create
+3. Click **"Bot"** in the left menu
+4. Click **"Reset Token"** → copy the token (**this is the most important thing — you'll need it later**)
+5. On the same page, turn **ON**:
+   - ✅ **MESSAGE CONTENT INTENT** (to read message content)
+   - ✅ **SERVER MEMBERS INTENT** (if you need member info)
+6. Click **"OAuth2 → URL Generator"** in the left menu
+7. Check **`bot`** under scopes
+8. Check these permissions:
+   - `Send Messages` / `Read Message History` / `Add Reactions`
+   - `Manage Messages` / `Manage Channels` / `Manage Threads` / `Embed Links`
+9. Copy the generated URL at the bottom → open in browser → select server to invite the bot
+
+> ⚠️ **Never share your token.** If you do, immediately regenerate it with Reset Token.
+
+### Step 2: Download and install
 
 ```bash
 git clone https://github.com/RazielAI/discord-mcp-server.git
@@ -48,48 +90,47 @@ cd discord-mcp-server
 npm install
 ```
 
-### 3A. Listener Mode (Auto-Reply)
+> 💡 No git? Download ZIP from the GitHub page ("Code → Download ZIP") and extract.
 
-Bot auto-responds when mentioned.
+### Step 3A: Listener Mode (auto-reply)
 
+**Bot auto-replies when mentioned in Discord.** This is all you need.
+
+Mac/Linux:
 ```bash
-DISCORD_BOT_TOKEN="your-token" node discord-listener.js
+DISCORD_BOT_TOKEN="token-from-step-1" node discord-listener.js
 ```
 
-Windows:
+Windows (PowerShell):
 ```powershell
-$env:DISCORD_BOT_TOKEN="your-token"
+$env:DISCORD_BOT_TOKEN="token-from-step-1"
 node discord-listener.js
 ```
 
-Mention the bot in Discord and it responds automatically 🎉
+Now mention the bot in Discord (@BotName). You'll get an automatic reply 🎉
 
-#### Listener Configuration (Environment Variables)
+#### Listener settings (optional)
 
-| Variable | Required | Description |
-|----------|---------|-------------|
-| `DISCORD_BOT_TOKEN` | ✅ | Bot token |
-| `DISCORD_GUILD_ID` | — | Restrict to a specific server |
-| `DISCORD_CHANNEL_ID` | — | Restrict to a specific channel |
-| `CODEX_PATH` | — | Path to Codex CLI (auto-detected) |
-| `CODEX_WORKSPACE` | — | Codex working directory |
-| `CODEX_TIMEOUT_MS` | — | Timeout (default: 120s) |
-| `BOT_SYSTEM_PROMPT` | — | Custom system prompt |
-| `BOT_NAME` | — | Bot display name |
-| `MAX_HISTORY` | — | Messages to include as context (default: 15) |
-| `OWNER_ID` | — | Owner's Discord ID |
+All optional except DISCORD_BOT_TOKEN.
 
-#### Custom Prompt Example
+| Variable | Description |
+|----------|-------------|
+| `DISCORD_BOT_TOKEN` | **Required.** Bot token |
+| `DISCORD_GUILD_ID` | Restrict to specific server |
+| `DISCORD_CHANNEL_ID` | Restrict to specific channel |
+| `CODEX_PATH` | Path to Codex CLI (auto-detected) |
+| `CODEX_WORKSPACE` | Codex working directory |
+| `CODEX_TIMEOUT_MS` | Timeout (default: 120s) |
+| `BOT_SYSTEM_PROMPT` | Customize AI personality and rules |
+| `BOT_NAME` | Bot display name |
+| `MAX_HISTORY` | Conversation memory (default: 15 messages) |
+| `OWNER_ID` | Owner's Discord ID |
 
-```bash
-BOT_SYSTEM_PROMPT="You are a programming expert. Answer technical questions clearly." \
-DISCORD_BOT_TOKEN="your-token" \
-node discord-listener.js
-```
+### Step 3B: MCP Tool Mode (AI controls Discord)
 
-### 3B. MCP Tool Mode
+**Tell Codex or Claude Code to operate Discord.**
 
-Control Discord from Codex CLI.
+#### For Codex CLI
 
 Add to `~/.codex/config.toml`:
 
@@ -100,18 +141,33 @@ command = "node"
 args = ["/path/to/discord-mcp-server/discord-mcp-server.js"]
 
 [mcp_servers.discord.env]
-DISCORD_BOT_TOKEN = "your-bot-token-here"
-DISCORD_CHANNEL_ID = "your-default-channel-id"
-DISCORD_GUILD_ID = "your-server-id"
+DISCORD_BOT_TOKEN = "token-from-step-1"
+DISCORD_CHANNEL_ID = "default-channel-id"
+DISCORD_GUILD_ID = "server-id"
 ```
 
-```bash
-codex
+#### For Claude Code
+
+Add to `.mcp.json` in your project:
+
+```json
+{
+  "mcpServers": {
+    "discord": {
+      "command": "node",
+      "args": ["/path/to/discord-mcp-server/discord-mcp-server.js"],
+      "env": {
+        "DISCORD_BOT_TOKEN": "token-from-step-1",
+        "DISCORD_CHANNEL_ID": "default-channel-id"
+      }
+    }
+  }
+}
 ```
 
-### 3C. Use Both Modes Together
+### Step 3C: Use both together
 
-Run listener (auto-reply) and MCP tools (Codex-side control) simultaneously.
+Listener (auto-reply) and MCP tools (AI control) can run simultaneously.
 
 Terminal 1:
 ```bash
@@ -123,7 +179,32 @@ Terminal 2:
 codex  # with MCP configured in config.toml
 ```
 
-> ⚠️ Both can run at the same time with the same bot token (separate processes connecting to Discord).
+> Same bot token for both — they're separate processes, no conflicts.
+
+---
+
+## Keep it running (daemonize)
+
+To keep the bot running after closing the terminal:
+
+### Using pm2 (recommended)
+
+```bash
+npm install -g pm2
+DISCORD_BOT_TOKEN="your-token" pm2 start discord-listener.js --name discord-bot
+pm2 save
+pm2 startup  # auto-start after reboot
+```
+
+Commands:
+```bash
+pm2 status              # check status
+pm2 logs discord-bot    # view logs
+pm2 restart discord-bot # restart
+pm2 stop discord-bot    # stop
+```
+
+---
 
 ## MCP Tools (23)
 
@@ -153,40 +234,45 @@ codex  # with MCP configured in config.toml
 | 🎨 Rich | `discord_send_embed` | Send embed (rich message) |
 | 🤖 Other | `discord_whoami` | Bot's own info |
 
-## Works with Claude Code too
-
-Add to your project's `.mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "discord": {
-      "command": "node",
-      "args": ["/path/to/discord-mcp-server/discord-mcp-server.js"],
-      "env": {
-        "DISCORD_BOT_TOKEN": "your-bot-token-here",
-        "DISCORD_CHANNEL_ID": "your-default-channel-id"
-      }
-    }
-  }
-}
-```
-
-Works with any MCP-compatible AI client (Claude Code, Cursor, Windsurf, Cline, etc.).
+---
 
 ## FAQ
 
 **Q: Listener or MCP mode?**  
-A: Want chat replies in Discord → Listener. Want to control Discord from Codex → MCP. Use both for the best experience.
+A: Want chat replies in Discord → Listener. Want to control Discord from AI → MCP. Both at once is best.
+
+**Q: How much does it cost?**  
+A: Discord Bot is free. You only pay OpenAI API fees. Normal conversations cost ~$5-10/month. Use GPT-4o mini for even cheaper.
+
+**Q: I'm subscribed to ChatGPT Plus / Claude Pro. Can I use it?**  
+A: No. Subscriptions and API access are separate. You need an API key from the developer console.
 
 **Q: Works with AI other than Codex?**  
-A: MCP mode works with any MCP-compatible AI. Listener mode uses Codex CLI by default, but you can point `CODEX_PATH` to another CLI tool.
+A: MCP mode works with any MCP-compatible AI (Claude Code, Cursor, Windsurf, Cline, etc.). Listener mode uses Codex CLI by default, but `CODEX_PATH` lets you use other CLI tools.
 
 **Q: Multiple servers?**  
 A: Yes. Don't set `DISCORD_GUILD_ID` and the bot responds in all servers it's in.
 
 **Q: Is it secure?**  
-A: Tokens stay in environment variables. Listener runs Codex with `--sandbox read-only` — no file writes or command execution.
+A: Tokens stay in environment variables (not in code). Listener runs Codex with `--sandbox read-only` — no file writes or command execution.
+
+**Q: Bot stops when I close the terminal**  
+A: See [Keep it running](#keep-it-running-daemonize). pm2 auto-starts after reboot.
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `node: command not found` | Node.js not installed | Install from [nodejs.org](https://nodejs.org/) |
+| `codex: command not found` | Codex CLI not installed | `npm install -g @openai/codex` |
+| Bot doesn't respond to mentions | MESSAGE CONTENT INTENT is off | Enable it in Developer Portal Bot tab |
+| `Error: TOKEN_INVALID` | Wrong token | Reset Token in Developer Portal |
+| `Missing Access` | Bot lacks permissions | Regenerate OAuth2 URL with permissions, re-invite |
+| Listener works but Codex errors | API key not set | `export OPENAI_API_KEY="sk-..."` |
+
+---
 
 ## License
 
