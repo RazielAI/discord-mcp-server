@@ -41,7 +41,7 @@ Codex CLIからDiscordの操作を何でもできる。
 ### 2. インストール
 
 ```bash
-git clone https://github.com/kogemon/discord-mcp-server.git
+git clone https://github.com/RazielAI/discord-mcp-server.git
 cd discord-mcp-server
 npm install
 ```
