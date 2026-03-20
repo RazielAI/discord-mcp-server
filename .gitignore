@@ -1,3 +1,7 @@
 node_modules/
 .env
 *.log
+
+# config.toml contains your token - don't commit it
+# Use config.toml.example as a template
+config.toml

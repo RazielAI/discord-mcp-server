@@ -96,6 +96,17 @@ npm install
 
 **Discordで話しかけたらAIが自動で返事するモード。** これだけでOKです。
 
+#### 🟢 簡単な方法（おすすめ）
+
+1. `config.toml` をテキストエディタで開く
+2. `discord_bot_token = ""` の `""` の中にステップ1のトークンを貼り付ける
+3. **Windows:** `start.bat` をダブルクリック
+4. **Mac/Linux:** ターミナルで `./start.sh` を実行
+
+これだけ！初回は自動で `npm install` も実行されます。
+
+#### コマンドで起動する場合
+
 Mac/Linux:
 ```bash
 DISCORD_BOT_TOKEN="ステップ1でコピーしたトークン" node discord-listener.js

@@ -26,22 +26,57 @@
 
 import pkg from "discord.js";
 const { Client, GatewayIntentBits, Partials } = pkg;
-import { readFileSync, writeFileSync, unlinkSync } from "node:fs";
+import { readFileSync, writeFileSync, unlinkSync, existsSync } from "node:fs";
 import { spawn, execSync } from "node:child_process";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
+
+// ─── Load config.toml (if present) ──────────────────────────────
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+function loadConfigToml() {
+  const cfgPath = join(__dirname, "config.toml");
+  if (!existsSync(cfgPath)) return {};
+  const cfg = {};
+  try {
+    const lines = readFileSync(cfgPath, "utf-8").split("\n");
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const eq = trimmed.indexOf("=");
+      if (eq === -1) continue;
+      const key = trimmed.slice(0, eq).trim();
+      let val = trimmed.slice(eq + 1).trim();
+      // Strip quotes
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      cfg[key] = val;
+    }
+  } catch (_) {}
+  return cfg;
+}
+
+const tomlConfig = loadConfigToml();
+
+// Helper: config.toml value → env fallback
+function cfg(envKey, tomlKey, fallback = "") {
+  return process.env[envKey] || tomlConfig[tomlKey] || tomlConfig[envKey] || fallback;
+}
 
 // ─── Config ──────────────────────────────────────────────────────
 
 const TOKEN = resolveToken();
-const GUILD_ID = process.env.DISCORD_GUILD_ID || "";
-const CHANNEL_ID = process.env.DISCORD_CHANNEL_ID || "";
-const CODEX_WORKSPACE = process.env.CODEX_WORKSPACE || process.cwd();
-const CODEX_TIMEOUT_MS = parseInt(process.env.CODEX_TIMEOUT_MS || "120000", 10);
-const MAX_HISTORY = parseInt(process.env.MAX_HISTORY || "15", 10);
-const BOT_NAME = process.env.BOT_NAME || "";
-const OWNER_ID = process.env.OWNER_ID || "";
-const CUSTOM_PROMPT = process.env.BOT_SYSTEM_PROMPT || "";
+const GUILD_ID = cfg("DISCORD_GUILD_ID", "discord_guild_id");
+const CHANNEL_ID = cfg("DISCORD_CHANNEL_ID", "discord_channel_id");
+const CODEX_WORKSPACE = cfg("CODEX_WORKSPACE", "codex_workspace", process.cwd());
+const CODEX_TIMEOUT_MS = parseInt(cfg("CODEX_TIMEOUT_MS", "codex_timeout_ms", "120000"), 10);
+const MAX_HISTORY = parseInt(cfg("MAX_HISTORY", "max_history", "15"), 10);
+const BOT_NAME = cfg("BOT_NAME", "bot_name");
+const OWNER_ID = cfg("OWNER_ID", "owner_id");
+const CUSTOM_PROMPT = cfg("BOT_SYSTEM_PROMPT", "bot_system_prompt");
 
 // ─── Resolve Codex path ─────────────────────────────────────────
 
@@ -70,7 +105,7 @@ console.log(`[listener] Codex command: ${CODEX_CMD} ${CODEX_ARGS_PREFIX.join(" "
 // ─── Token resolution ────────────────────────────────────────────
 
 function resolveToken() {
-  let t = process.env.DISCORD_BOT_TOKEN;
+  let t = process.env.DISCORD_BOT_TOKEN || tomlConfig["discord_bot_token"] || tomlConfig["DISCORD_BOT_TOKEN"];
   if (!t && process.env.DISCORD_BOT_TOKEN_FILE) {
     try {
       t = readFileSync(process.env.DISCORD_BOT_TOKEN_FILE, "utf-8").trim();
@@ -81,7 +116,10 @@ function resolveToken() {
   }
   if (!t) {
     console.error(
-      "[listener] No token. Set DISCORD_BOT_TOKEN or DISCORD_BOT_TOKEN_FILE."
+      "[listener] No token found. Set it in one of:\n" +
+      "  1. config.toml → discord_bot_token = \"your-token\"\n" +
+      "  2. Environment variable → DISCORD_BOT_TOKEN\n" +
+      "  3. Token file → DISCORD_BOT_TOKEN_FILE"
     );
     process.exit(1);
   }

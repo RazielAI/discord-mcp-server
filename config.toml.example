@@ -1,12 +1,34 @@
-# Codex CLI configuration example
-# Copy this to ~/.codex/config.toml and edit the values
+# Discord MCP Server - 設定ファイル
+# このファイルにトークンを書いたら、start.bat（Windows）またはstart.sh（Mac/Linux）をダブルクリックで起動できます。
 
-[mcp_servers.discord]
-type = "stdio"
-command = "node"
-args = ["/path/to/discord-mcp-server/discord-mcp-server.js"]
+# ===== 必須 =====
+# Discord Developer Portal (https://discord.com/developers) で取得したBotトークン
+discord_bot_token = ""
 
-[mcp_servers.discord.env]
-DISCORD_BOT_TOKEN = "your-bot-token-here"
-DISCORD_CHANNEL_ID = "your-default-channel-id"
-DISCORD_GUILD_ID = "your-server-id"
+# ===== オプション =====
+# 特定のサーバーのみに制限（空欄 = 全サーバーで応答）
+# discord_guild_id = ""
+
+# 特定のチャンネルのみに制限（空欄 = 全チャンネルで応答）
+# discord_channel_id = ""
+
+# AIの性格やルールをカスタマイズ
+# bot_system_prompt = "あなたはプログラミング専門のAIアシスタントです。"
+
+# Bot表示名
+# bot_name = ""
+
+# 会話の記憶数（デフォルト: 15メッセージ）
+# max_history = "15"
+
+# タイムアウト秒数（デフォルト: 120秒）
+# codex_timeout_ms = "120000"
+
+# Codex CLIのパス（通常は自動検出するので不要）
+# codex_path = ""
+
+# Codexの作業ディレクトリ
+# codex_workspace = ""
+
+# オーナーのDiscord ID
+# owner_id = ""
