@@ -1,44 +1,46 @@
+🇺🇸 [English](README.md) | 🇯🇵 [日本語](README.ja.md) | 🇨🇳 [中文](README.zh.md)
+
 # Discord MCP Server
 
-**あなたのPCで動いてるCodexを、Discord上の会話で動かせます。**
+**Run Codex on Discord — mention your bot, get AI replies. Plus 23 MCP tools for full Discord control.**
 
-Discordでメンションするだけで、裏でCodex CLIが考えて返事してくれます。  
-さらにMCPツール23個で、メッセージ・スレッド・チャンネル・メンバー管理まで全部できます。
+Mention your bot in Discord and Codex CLI responds automatically.  
+23 MCP tools let you read, send, search, and manage everything in Discord from your AI.
 
-## 2つのモード
+## Two Modes
 
-### 🗣️ リスナーモード（自動応答）
-Discordでbotをメンション → Codexが自動で返事。チャットするだけ。
-
-```
-あなた: @MyBot このコードレビューして
-MyBot:  （Codexが考えて返事する）
-```
-
-### 🔧 MCPツールモード（23ツール）
-Codex CLIからDiscordの操作を何でもできる。
+### 🗣️ Listener Mode (Auto-Reply)
+Mention the bot in Discord → Codex thinks and replies. Just chat.
 
 ```
-> Discordの #general を読んで
-> #dev にスレッド作って議事録書いて
-> サーバーのメンバー一覧見せて
+You:    @MyBot review this code
+MyBot:  (Codex thinks and responds)
 ```
 
-## セットアップ（5分）
+### 🔧 MCP Tool Mode (23 Tools)
+Control Discord from Codex CLI — messages, threads, channels, members.
 
-### 1. Discord Botを作る
+```
+> Read #general on Discord
+> Create a thread in #dev and write meeting notes
+> Show me the server member list
+```
 
-1. [Discord Developer Portal](https://discord.com/developers/applications) でアプリケーションを作成
-2. **Bot** タブでトークンを取得（`Reset Token` → コピー）
-3. **Bot** タブで以下を有効化：
+## Setup (5 minutes)
+
+### 1. Create a Discord Bot
+
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications) and create an application
+2. **Bot** tab → get your token (`Reset Token` → copy)
+3. **Bot** tab → enable:
    - ✅ MESSAGE CONTENT INTENT
-   - ✅ SERVER MEMBERS INTENT（メンバー情報を使う場合）
-4. **OAuth2 → URL Generator** で権限を選択：
-   - スコープ: `bot`
-   - 権限: `Send Messages` / `Read Message History` / `Add Reactions` / `Manage Messages` / `Manage Channels` / `Manage Threads` / `Embed Links`
-5. 生成されたURLでBotをサーバーに招待
+   - ✅ SERVER MEMBERS INTENT (if you need member info)
+4. **OAuth2 → URL Generator** → select permissions:
+   - Scopes: `bot`
+   - Permissions: `Send Messages` / `Read Message History` / `Add Reactions` / `Manage Messages` / `Manage Channels` / `Manage Threads` / `Embed Links`
+5. Use the generated URL to invite the bot to your server
 
-### 2. インストール
+### 2. Install
 
 ```bash
 git clone https://github.com/RazielAI/discord-mcp-server.git
@@ -46,51 +48,50 @@ cd discord-mcp-server
 npm install
 ```
 
-### 3A. リスナーモード（自動応答）
+### 3A. Listener Mode (Auto-Reply)
 
-Botがメンションされたら自動でCodexが返事するモード。
+Bot auto-responds when mentioned.
 
 ```bash
-# 起動
 DISCORD_BOT_TOKEN="your-token" node discord-listener.js
 ```
 
-Windowsの場合：
+Windows:
 ```powershell
 $env:DISCORD_BOT_TOKEN="your-token"
 node discord-listener.js
 ```
 
-Discordでbotをメンションすると自動応答します 🎉
+Mention the bot in Discord and it responds automatically 🎉
 
-#### リスナーの設定（環境変数）
+#### Listener Configuration (Environment Variables)
 
-| 変数 | 必須 | 説明 |
-|------|-----|------|
-| `DISCORD_BOT_TOKEN` | ✅ | Botトークン |
-| `DISCORD_GUILD_ID` | — | 特定サーバーのみに制限 |
-| `DISCORD_CHANNEL_ID` | — | 特定チャンネルのみに制限 |
-| `CODEX_PATH` | — | Codex CLIのパス（自動検出） |
-| `CODEX_WORKSPACE` | — | Codexの作業ディレクトリ |
-| `CODEX_TIMEOUT_MS` | — | タイムアウト（デフォルト: 120秒） |
-| `BOT_SYSTEM_PROMPT` | — | カスタムシステムプロンプト |
-| `BOT_NAME` | — | Bot表示名 |
-| `MAX_HISTORY` | — | コンテキストに含めるメッセージ数（デフォルト: 15） |
-| `OWNER_ID` | — | オーナーのDiscord ID |
+| Variable | Required | Description |
+|----------|---------|-------------|
+| `DISCORD_BOT_TOKEN` | ✅ | Bot token |
+| `DISCORD_GUILD_ID` | — | Restrict to a specific server |
+| `DISCORD_CHANNEL_ID` | — | Restrict to a specific channel |
+| `CODEX_PATH` | — | Path to Codex CLI (auto-detected) |
+| `CODEX_WORKSPACE` | — | Codex working directory |
+| `CODEX_TIMEOUT_MS` | — | Timeout (default: 120s) |
+| `BOT_SYSTEM_PROMPT` | — | Custom system prompt |
+| `BOT_NAME` | — | Bot display name |
+| `MAX_HISTORY` | — | Messages to include as context (default: 15) |
+| `OWNER_ID` | — | Owner's Discord ID |
 
-#### カスタムプロンプト例
+#### Custom Prompt Example
 
 ```bash
-BOT_SYSTEM_PROMPT="あなたはプログラミング専門のAIアシスタントです。技術的な質問に日本語で答えてください。" \
+BOT_SYSTEM_PROMPT="You are a programming expert. Answer technical questions clearly." \
 DISCORD_BOT_TOKEN="your-token" \
 node discord-listener.js
 ```
 
-### 3B. MCPツールモード
+### 3B. MCP Tool Mode
 
-Codex CLIからDiscordを操作するモード。
+Control Discord from Codex CLI.
 
-`~/.codex/config.toml` に追加：
+Add to `~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.discord]
@@ -108,53 +109,53 @@ DISCORD_GUILD_ID = "your-server-id"
 codex
 ```
 
-### 3C. 両方同時に使う
+### 3C. Use Both Modes Together
 
-リスナー（自動応答）とMCPツール（Codexからの操作）を同時に動かせます。
+Run listener (auto-reply) and MCP tools (Codex-side control) simultaneously.
 
-ターミナル1:
+Terminal 1:
 ```bash
 DISCORD_BOT_TOKEN="your-token" node discord-listener.js
 ```
 
-ターミナル2:
+Terminal 2:
 ```bash
-codex  # config.tomlにMCP設定済み
+codex  # with MCP configured in config.toml
 ```
 
-> ⚠️ 同じBotトークンを使う場合、リスナーとMCPサーバーは同時に動作できます（別プロセスでDiscordに接続）。
+> ⚠️ Both can run at the same time with the same bot token (separate processes connecting to Discord).
 
-## MCPツール一覧（23個）
+## MCP Tools (23)
 
-| カテゴリ | ツール | できること |
-|---------|-------|-----------|
-| 💬 メッセージ | `discord_send` | メッセージ送信（長文自動分割） |
-| | `discord_reply` | 特定メッセージに返信 |
-| | `discord_edit` | Bot送信済みメッセージを編集 |
-| | `discord_delete` | メッセージ削除 |
-| | `discord_read` | メッセージ履歴取得（ページネーション対応） |
-| | `discord_search` | チャンネル内メッセージ検索 |
-| 👍 リアクション | `discord_react` | 絵文字リアクション追加 |
-| 🧵 スレッド | `discord_thread_create` | スレッド作成 |
-| | `discord_thread_list` | アクティブスレッド一覧 |
-| 📺 チャンネル | `discord_channel_list` | チャンネル一覧 |
-| | `discord_channel_info` | チャンネル詳細情報 |
-| | `discord_channel_create` | チャンネル新規作成 |
-| | `discord_channel_edit` | チャンネル名・トピック変更 |
-| | `discord_channel_delete` | チャンネル削除 |
-| | `discord_set_topic` | トピック設定 |
-| 📌 ピン | `discord_pin` | メッセージをピン留め |
-| | `discord_unpin` | ピン解除 |
-| | `discord_pins_list` | ピン留めメッセージ一覧 |
-| 👥 サーバー | `discord_server_info` | サーバー情報 |
-| | `discord_member_list` | メンバー一覧 |
-| | `discord_member_info` | メンバー詳細情報 |
-| 🎨 リッチ送信 | `discord_send_embed` | Embed（装飾メッセージ）送信 |
-| 🤖 その他 | `discord_whoami` | Bot自身の情報 |
+| Category | Tool | Description |
+|----------|------|-------------|
+| 💬 Messages | `discord_send` | Send message (auto-splits long text) |
+| | `discord_reply` | Reply to a specific message |
+| | `discord_edit` | Edit bot's own message |
+| | `discord_delete` | Delete a message |
+| | `discord_read` | Read message history (with pagination) |
+| | `discord_search` | Search messages in a channel |
+| 👍 Reactions | `discord_react` | Add emoji reaction |
+| 🧵 Threads | `discord_thread_create` | Create a thread |
+| | `discord_thread_list` | List active threads |
+| 📺 Channels | `discord_channel_list` | List channels |
+| | `discord_channel_info` | Get channel details |
+| | `discord_channel_create` | Create a channel |
+| | `discord_channel_edit` | Edit channel name/topic |
+| | `discord_channel_delete` | Delete a channel |
+| | `discord_set_topic` | Set channel topic |
+| 📌 Pins | `discord_pin` | Pin a message |
+| | `discord_unpin` | Unpin a message |
+| | `discord_pins_list` | List pinned messages |
+| 👥 Server | `discord_server_info` | Server info |
+| | `discord_member_list` | List members |
+| | `discord_member_info` | Get member details |
+| 🎨 Rich | `discord_send_embed` | Send embed (rich message) |
+| 🤖 Other | `discord_whoami` | Bot's own info |
 
-## Claude Codeでも使えます
+## Works with Claude Code too
 
-プロジェクトの `.mcp.json` に追加：
+Add to your project's `.mcp.json`:
 
 ```json
 {
@@ -171,22 +172,22 @@ codex  # config.tomlにMCP設定済み
 }
 ```
 
-MCP対応のAIクライアントなら何でも接続できます（Claude Code, Cursor, Windsurf, Cline等）。
+Works with any MCP-compatible AI client (Claude Code, Cursor, Windsurf, Cline, etc.).
 
 ## FAQ
 
-**Q: リスナーモードとMCPモード、どっちを使えばいい？**  
-A: Discordからチャットして返事がほしい → リスナーモード。Codexからプログラム的にDiscordを操作したい → MCPモード。両方使うのがおすすめ。
+**Q: Listener or MCP mode?**  
+A: Want chat replies in Discord → Listener. Want to control Discord from Codex → MCP. Use both for the best experience.
 
-**Q: Codex以外のAIでも使える？**  
-A: MCPモードはMCP対応のAIなら何でも。リスナーモードはCodex CLIを使いますが、`CODEX_PATH` で別のCLIツールを指定することも可能です。
+**Q: Works with AI other than Codex?**  
+A: MCP mode works with any MCP-compatible AI. Listener mode uses Codex CLI by default, but you can point `CODEX_PATH` to another CLI tool.
 
-**Q: 複数サーバーで使える？**  
-A: はい。`DISCORD_GUILD_ID` を設定しなければ、Botが参加している全サーバーで応答します。
+**Q: Multiple servers?**  
+A: Yes. Don't set `DISCORD_GUILD_ID` and the bot responds in all servers it's in.
 
-**Q: セキュリティは大丈夫？**  
-A: トークンは環境変数で管理。リスナーモードではCodexを `--sandbox read-only` で実行するため、ファイルの書き換えやコマンド実行はできません。
+**Q: Is it secure?**  
+A: Tokens stay in environment variables. Listener runs Codex with `--sandbox read-only` — no file writes or command execution.
 
-## ライセンス
+## License
 
 MIT
