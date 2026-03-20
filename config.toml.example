@@ -5,6 +5,10 @@
 # Discord Developer Portal (https://discord.com/developers) で取得したBotトークン
 discord_bot_token = ""
 
+# OpenAI APIキー（https://platform.openai.com/api-keys で取得）
+# リスナーモードでCodexが応答を生成するために必要です
+openai_api_key = ""
+
 # ===== オプション =====
 # 特定のサーバーのみに制限（空欄 = 全サーバーで応答）
 # discord_guild_id = ""

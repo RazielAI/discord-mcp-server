@@ -9,7 +9,7 @@ echo "  Discord MCP Server - Listener"
 echo "  =============================="
 echo ""
 
-# Check Node.js
+# ─── Check Node.js ────────────────────────────────────────
 if ! command -v node &>/dev/null; then
     echo "  [ERROR] Node.js not found."
     echo "  Install from https://nodejs.org/"
@@ -17,17 +17,33 @@ if ! command -v node &>/dev/null; then
     exit 1
 fi
 
-# Check if node_modules exists
+# ─── Check npm install ────────────────────────────────────
 if [ ! -d "node_modules" ]; then
-    echo "  [INFO] First-time setup... running npm install."
+    echo "  [SETUP] First-time setup... running npm install."
     echo ""
     npm install
     echo ""
 fi
 
-# Check config.toml for token
+# ─── Check Codex CLI ──────────────────────────────────────
+if ! command -v codex &>/dev/null; then
+    echo "  [SETUP] Codex CLI not found. Installing..."
+    echo ""
+    npm install -g @openai/codex
+    echo ""
+    if ! command -v codex &>/dev/null; then
+        echo "  [ERROR] Failed to install Codex CLI."
+        echo "  Run manually: npm install -g @openai/codex"
+        echo ""
+        exit 1
+    fi
+    echo "  [OK] Codex CLI installed"
+    echo ""
+fi
+
+# ─── Check config.toml for bot token ──────────────────────
 if ! grep -qE 'discord_bot_token\s*=\s*"[^"]+"' config.toml 2>/dev/null; then
-    echo "  [ERROR] No token in config.toml."
+    echo "  [ERROR] No bot token in config.toml."
     echo ""
     echo "  1. Open config.toml in a text editor"
     echo "  2. Paste your token inside discord_bot_token = \"\""
@@ -38,6 +54,23 @@ if ! grep -qE 'discord_bot_token\s*=\s*"[^"]+"' config.toml 2>/dev/null; then
     exit 1
 fi
 
+# ─── Load OpenAI API key from config.toml ─────────────────
+if [ -z "$OPENAI_API_KEY" ]; then
+    _key=$(grep -oP 'openai_api_key\s*=\s*"\K[^"]+' config.toml 2>/dev/null || true)
+    if [ -n "$_key" ]; then
+        export OPENAI_API_KEY="$_key"
+        echo "  [OK] Loaded OpenAI API key from config.toml"
+    else
+        echo "  [ERROR] No OpenAI API key found."
+        echo ""
+        echo "  Set openai_api_key in config.toml"
+        echo "  Get your key: https://platform.openai.com/api-keys"
+        echo ""
+        exit 1
+    fi
+fi
+
+# ─── Launch ───────────────────────────────────────────────
 echo "  [OK] Starting..."
 echo "  Mention your bot in Discord and it will auto-reply."
 echo "  Press Ctrl+C to stop."
