@@ -1,38 +1,31 @@
-# Discord MCP Server - 設定ファイル
-# このファイルにトークンを書いたら、start.bat（Windows）またはstart.sh（Mac/Linux）をダブルクリックで起動できます。
+# Discord MCP Server - Configuration
+# Fill in your tokens, then run start.bat (Windows) or start.sh (Mac/Linux).
 
-# ===== 必須 =====
-# Discord Developer Portal (https://discord.com/developers) で取得したBotトークン
+# ===== Required =====
+# Get your bot token from https://discord.com/developers
 discord_bot_token = ""
 
-# OpenAI APIキー（https://platform.openai.com/api-keys で取得）
-# リスナーモードでCodexが応答を生成するために必要です
-openai_api_key = ""
-
-# ===== オプション =====
-# 特定のサーバーのみに制限（空欄 = 全サーバーで応答）
+# ===== Optional =====
+# Restrict to a specific server (empty = respond in all servers)
 # discord_guild_id = ""
 
-# 特定のチャンネルのみに制限（空欄 = 全チャンネルで応答）
+# Restrict to a specific channel (empty = respond in all channels)
 # discord_channel_id = ""
 
-# AIの性格やルールをカスタマイズ
-# bot_system_prompt = "あなたはプログラミング専門のAIアシスタントです。"
+# Customize the AI's personality and rules
+# bot_system_prompt = "You are a programming expert. Answer technical questions helpfully."
 
-# Bot表示名
+# Bot display name in prompts
 # bot_name = ""
 
-# 会話の記憶数（デフォルト: 15メッセージ）
+# Number of recent messages to include as context (default: 15)
 # max_history = "15"
 
-# タイムアウト秒数（デフォルト: 120秒）
+# Timeout in milliseconds (default: 120000 = 2 minutes)
 # codex_timeout_ms = "120000"
 
-# Codex CLIのパス（通常は自動検出するので不要）
+# Path to codex.js entry point (auto-detected, usually not needed)
 # codex_path = ""
 
-# Codexの作業ディレクトリ
+# Working directory for Codex
 # codex_workspace = ""
-
-# オーナーのDiscord ID
-# owner_id = ""

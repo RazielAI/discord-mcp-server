@@ -54,22 +54,6 @@ if ! grep -qE 'discord_bot_token\s*=\s*"[^"]+"' config.toml 2>/dev/null; then
     exit 1
 fi
 
-# ─── Load OpenAI API key from config.toml ─────────────────
-if [ -z "$OPENAI_API_KEY" ]; then
-    _key=$(grep -oP 'openai_api_key\s*=\s*"\K[^"]+' config.toml 2>/dev/null || true)
-    if [ -n "$_key" ]; then
-        export OPENAI_API_KEY="$_key"
-        echo "  [OK] Loaded OpenAI API key from config.toml"
-    else
-        echo "  [ERROR] No OpenAI API key found."
-        echo ""
-        echo "  Set openai_api_key in config.toml"
-        echo "  Get your key: https://platform.openai.com/api-keys"
-        echo ""
-        exit 1
-    fi
-fi
-
 # ─── Launch ───────────────────────────────────────────────
 echo "  [OK] Starting..."
 echo "  Mention your bot in Discord and it will auto-reply."

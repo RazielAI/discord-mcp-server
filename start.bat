@@ -10,8 +10,8 @@ echo.
 :: ─── Check Node.js ──────────────────────────────────────────
 where node >nul 2>&1
 if %errorlevel% neq 0 (
-    echo   [ERROR] Node.js が見つかりません。
-    echo   https://nodejs.org/ からインストールしてください。
+    echo   [ERROR] Node.js not found.
+    echo   Download from https://nodejs.org/
     echo.
     pause
     exit /b 1
@@ -19,7 +19,7 @@ if %errorlevel% neq 0 (
 
 :: ─── Check npm install ──────────────────────────────────────
 if not exist "%~dp0node_modules" (
-    echo   [SETUP] 初回セットアップ... npm install を実行します。
+    echo   [SETUP] First-time setup... running npm install.
     echo.
     cd /d "%~dp0"
     call npm install
@@ -29,81 +29,49 @@ if not exist "%~dp0node_modules" (
 :: ─── Check Codex CLI ────────────────────────────────────────
 where codex >nul 2>&1
 if %errorlevel% neq 0 (
-    echo   [SETUP] Codex CLI が見つかりません。インストールします...
+    echo   [SETUP] Codex CLI not found. Installing...
     echo.
     call npm install -g @openai/codex
     echo.
     where codex >nul 2>&1
     if %errorlevel% neq 0 (
-        echo   [ERROR] Codex CLI のインストールに失敗しました。
-        echo   手動で実行してください: npm install -g @openai/codex
+        echo   [ERROR] Failed to install Codex CLI.
+        echo   Run manually: npm install -g @openai/codex
         echo.
         pause
         exit /b 1
     )
-    echo   [OK] Codex CLI インストール完了
+    echo   [OK] Codex CLI installed
     echo.
 )
 
 :: ─── Check config.toml for bot token ────────────────────────
 findstr /r "discord_bot_token.*=.*\"[^\"]\+\"" "%~dp0config.toml" >nul 2>&1
 if %errorlevel% neq 0 (
-    echo   [ERROR] config.toml に Bot トークンが設定されていません。
+    echo   [ERROR] No bot token in config.toml.
     echo.
-    echo   1. config.toml をテキストエディタで開く
-    echo   2. discord_bot_token = "" の中にトークンを貼る
-    echo   3. もう一度 start.bat を実行
+    echo   1. Open config.toml in a text editor
+    echo   2. Paste your token inside discord_bot_token = ""
+    echo   3. Run start.bat again
     echo.
-    echo   トークンの取得: https://discord.com/developers/applications
-    echo.
-    pause
-    exit /b 1
-)
-
-:: ─── Load OpenAI API key from config.toml ───────────────────
-cd /d "%~dp0"
-
-:: Check if OPENAI_API_KEY is already set
-if defined OPENAI_API_KEY goto :skip_apikey
-
-:: Try to extract from config.toml
-for /f "tokens=2 delims==" %%a in ('findstr /r "openai_api_key.*=.*\"[^\"]\+\"" "%~dp0config.toml" 2^>nul') do (
-    set "_raw=%%a"
-)
-if defined _raw (
-    :: Strip quotes and spaces
-    set "_raw=%_raw: =%"
-    set "_raw=%_raw:"=%"
-    if not "%_raw%"=="" (
-        set "OPENAI_API_KEY=%_raw%"
-        echo   [OK] OpenAI API キーを config.toml から読み込みました
-    )
-)
-set "_raw="
-
-if not defined OPENAI_API_KEY (
-    echo   [ERROR] OpenAI API キーが設定されていません。
-    echo.
-    echo   config.toml の openai_api_key = "" にAPIキーを貼ってください。
-    echo   APIキーの取得: https://platform.openai.com/api-keys
+    echo   Get your token: https://discord.com/developers/applications
     echo.
     pause
     exit /b 1
 )
-
-:skip_apikey
 
 :: ─── Launch ─────────────────────────────────────────────────
-echo   [OK] 起動中...
-echo   Discordでbotをメンションすると自動で返事します。
-echo   停止するには Ctrl+C を押してください。
+cd /d "%~dp0"
+echo   [OK] Starting...
+echo   Mention your bot in Discord and it will auto-reply.
+echo   Press Ctrl+C to stop.
 echo.
 
 node discord-listener.js
 
 if %errorlevel% neq 0 (
     echo.
-    echo   [ERROR] リスナーがエラーで停止しました。
+    echo   [ERROR] Listener stopped with an error.
     echo.
     pause
 )

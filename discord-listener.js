@@ -9,27 +9,25 @@
  * Usage:
  *   node discord-listener.js
  *
- * Required env:
- *   DISCORD_BOT_TOKEN   - Your Discord bot token
+ * Required:
+ *   - Discord bot token (config.toml or DISCORD_BOT_TOKEN env var)
+ *   - Codex CLI installed and authenticated (npm install -g @openai/codex)
  *
- * Optional env:
+ * Optional env / config.toml:
  *   DISCORD_GUILD_ID    - Restrict to one server (default: all servers)
  *   DISCORD_CHANNEL_ID  - Restrict to one channel (default: all channels)
- *   CODEX_PATH          - Path to codex CLI (default: auto-detect via npx)
  *   CODEX_WORKSPACE     - Working directory for Codex (default: cwd)
  *   CODEX_TIMEOUT_MS    - Timeout for Codex execution (default: 120000)
  *   BOT_SYSTEM_PROMPT   - Custom system prompt (default: helpful AI assistant)
  *   BOT_NAME            - Bot display name in prompts (default: from Discord)
  *   MAX_HISTORY         - Number of recent messages for context (default: 15)
- *   OWNER_ID            - Discord user ID of the bot owner (optional)
  */
 
 import pkg from "discord.js";
 const { Client, GatewayIntentBits, Partials } = pkg;
-import { readFileSync, writeFileSync, unlinkSync, existsSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { spawn, execSync } from "node:child_process";
 import { join, dirname } from "node:path";
-import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 
 // ─── Load config.toml (if present) ──────────────────────────────
@@ -49,7 +47,6 @@ function loadConfigToml() {
       if (eq === -1) continue;
       const key = trimmed.slice(0, eq).trim();
       let val = trimmed.slice(eq + 1).trim();
-      // Strip quotes
       if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
         val = val.slice(1, -1);
       }
@@ -61,7 +58,6 @@ function loadConfigToml() {
 
 const tomlConfig = loadConfigToml();
 
-// Helper: config.toml value → env fallback
 function cfg(envKey, tomlKey, fallback = "") {
   return process.env[envKey] || tomlConfig[tomlKey] || tomlConfig[envKey] || fallback;
 }
@@ -75,32 +71,57 @@ const CODEX_WORKSPACE = cfg("CODEX_WORKSPACE", "codex_workspace", process.cwd())
 const CODEX_TIMEOUT_MS = parseInt(cfg("CODEX_TIMEOUT_MS", "codex_timeout_ms", "120000"), 10);
 const MAX_HISTORY = parseInt(cfg("MAX_HISTORY", "max_history", "15"), 10);
 const BOT_NAME = cfg("BOT_NAME", "bot_name");
-const OWNER_ID = cfg("OWNER_ID", "owner_id");
 const CUSTOM_PROMPT = cfg("BOT_SYSTEM_PROMPT", "bot_system_prompt");
 
-// ─── Resolve Codex path ─────────────────────────────────────────
+// ─── Resolve Codex entry point ──────────────────────────────────
 
-let CODEX_CMD = process.env.CODEX_PATH || "";
-let CODEX_ARGS_PREFIX = [];
+let CODEX_JS = "";
 
-if (!CODEX_CMD) {
-  // Try to find codex in PATH or common locations
+// Find codex.js — the Node.js entry point of Codex CLI
+// We run `node codex.js` directly instead of the CLI wrapper to avoid TTY issues
+function resolveCodexJs() {
+  // 1. Explicit config
+  const explicit = cfg("CODEX_PATH", "codex_path");
+  if (explicit) {
+    if (existsSync(explicit)) return explicit;
+  }
+
+  // 2. npm global modules
   try {
-    const which = execSync("where codex 2>nul || which codex 2>/dev/null", {
-      encoding: "utf-8",
-      timeout: 5000,
-    }).trim().split("\n")[0].trim().replace(/\r/g, "");
-    if (which) CODEX_CMD = which;
+    const npmRoot = execSync("npm root -g", { encoding: "utf-8", timeout: 10000 }).trim();
+    const candidate = join(npmRoot, "@openai", "codex", "bin", "codex.js");
+    if (existsSync(candidate)) return candidate;
   } catch (_) {}
+
+  // 3. Resolve from `codex` command location
+  try {
+    const which = execSync(
+      process.platform === "win32" ? "where codex 2>nul" : "which codex 2>/dev/null",
+      { encoding: "utf-8", timeout: 5000 }
+    ).trim().split("\n")[0].trim().replace(/\r/g, "");
+    if (which) {
+      // codex binary is in .../npm/codex → node_modules is at .../npm/node_modules
+      const npmDir = dirname(which);
+      const candidate = join(npmDir, "node_modules", "@openai", "codex", "bin", "codex.js");
+      if (existsSync(candidate)) return candidate;
+    }
+  } catch (_) {}
+
+  return "";
 }
 
-if (!CODEX_CMD) {
-  // Fallback: use npx
-  CODEX_CMD = "npx";
-  CODEX_ARGS_PREFIX = ["codex"];
+CODEX_JS = resolveCodexJs();
+
+if (!CODEX_JS) {
+  console.error(
+    "[listener] Codex CLI not found.\n" +
+    "  Install it: npm install -g @openai/codex\n" +
+    "  Then authenticate: codex"
+  );
+  process.exit(1);
 }
 
-console.log(`[listener] Codex command: ${CODEX_CMD} ${CODEX_ARGS_PREFIX.join(" ")}`.trim());
+console.log(`[listener] Codex entry: ${CODEX_JS}`);
 
 // ─── Token resolution ────────────────────────────────────────────
 
@@ -155,16 +176,9 @@ discord.once("ready", () => {
 
 discord.on("messageCreate", async (message) => {
   try {
-    // Ignore own messages
     if (message.author.id === botId) return;
-
-    // Ignore DMs (guild only)
     if (!message.guild) return;
-
-    // Guild filter
     if (GUILD_ID && message.guild.id !== GUILD_ID) return;
-
-    // Channel filter
     if (CHANNEL_ID && message.channel.id !== CHANNEL_ID) return;
 
     // Only respond to mentions (user mention OR role mention)
@@ -174,7 +188,6 @@ discord.on("messageCreate", async (message) => {
       content.includes(`<@${botId}>`) ||
       content.includes(`<@!${botId}>`);
 
-    // Check if any of the bot's roles are mentioned
     let mentionedRole = false;
     if (!mentionedUser && message.mentions.roles?.size > 0) {
       try {
@@ -182,9 +195,7 @@ discord.on("messageCreate", async (message) => {
         mentionedRole = message.mentions.roles.some(role =>
           botMember.roles.cache.has(role.id)
         );
-      } catch (e) {
-        console.log(`[listener] Could not fetch bot member: ${e.message}`);
-      }
+      } catch (_) {}
     }
 
     if (!mentionedUser && !mentionedRole) return;
@@ -192,7 +203,6 @@ discord.on("messageCreate", async (message) => {
     const channelId = message.channel.id;
     const channelName = message.channel.name || channelId;
 
-    // Prevent concurrent processing per channel
     if (activeChannels.has(channelId)) {
       console.log(`[listener] Already processing in #${channelName}, skipping`);
       return;
@@ -203,42 +213,30 @@ discord.on("messageCreate", async (message) => {
       `[listener] Mentioned in #${channelName} by ${message.author.globalName || message.author.username}`
     );
 
-    // Show typing indicator
-    try {
-      await message.channel.sendTyping();
-    } catch (_) {}
+    try { await message.channel.sendTyping(); } catch (_) {}
 
     // Wait a moment for multi-message input
     await sleep(2000);
 
     try {
-      // Fetch recent history
-      const recentMessages = await message.channel.messages.fetch({
-        limit: MAX_HISTORY,
-      });
+      const recentMessages = await message.channel.messages.fetch({ limit: MAX_HISTORY });
       const history = recentMessages
         .reverse()
         .map((m) => formatHistoryMessage(m))
         .join("\n");
 
-      // Clean user input
       const userInput = cleanMentions(content);
 
-      // Build prompt
       const prompt = buildPrompt({
         channelName,
         history,
         userInput,
-        authorName:
-          message.author.globalName || message.author.username,
-        isOwner: OWNER_ID ? message.author.id === OWNER_ID : false,
+        authorName: message.author.globalName || message.author.username,
       });
 
-      // Run Codex
       const result = await runCodex(prompt);
       const reply = result.trim() || "（応答を生成できませんでした）";
 
-      // Send reply (split if >2000 chars)
       await sendLong(message.channel, reply);
     } finally {
       activeChannels.delete(channelId);
@@ -256,7 +254,7 @@ discord.on("messageCreate", async (message) => {
 
 // ─── Prompt builder ──────────────────────────────────────────────
 
-function buildPrompt({ channelName, history, userInput, authorName, isOwner }) {
+function buildPrompt({ channelName, history, userInput, authorName }) {
   const systemPrompt =
     CUSTOM_PROMPT ||
     `You are ${botName}, an AI assistant living in Discord.
@@ -268,7 +266,7 @@ Respond in the same language the user writes in.`;
 
 ## Current context
 - Channel: #${channelName}
-- Message from: ${authorName}${isOwner ? " (owner)" : ""}
+- Message from: ${authorName}
 - Message: ${userInput || "(mention only)"}
 
 ## Recent conversation
@@ -284,48 +282,41 @@ Keep it under 1500 characters.`;
 
 function runCodex(prompt) {
   return new Promise((resolve, reject) => {
-    const tmpFile = join(tmpdir(), `discord-listener-${Date.now()}.txt`);
-    writeFileSync(tmpFile, prompt, "utf-8");
-
-    const outFile = tmpFile + ".out";
-
-    // Use file-based prompt: write prompt to file, tell Codex to read it
-    const codexPrompt = `Read ${tmpFile} and follow its instructions. Output ONLY your reply text.`;
-    const cmdStr = `${CODEX_CMD} ${CODEX_ARGS_PREFIX.join(" ")} exec --sandbox read-only --skip-git-repo-check -o "${outFile}" "${codexPrompt.replace(/"/g, '\\"')}"`.trim();
-
-    console.log(`[listener] Running codex...`);
-
-    const child = spawn(cmdStr, [], {
+    // Spawn node with codex.js directly — avoids TTY requirement of CLI wrapper
+    const child = spawn(process.execPath, [
+      CODEX_JS,
+      "exec",
+      "--sandbox", "read-only",
+      "--skip-git-repo-check",
+      "-",  // read prompt from stdin
+    ], {
       cwd: CODEX_WORKSPACE,
       timeout: CODEX_TIMEOUT_MS,
-      stdio: ["ignore", "pipe", "pipe"],
+      stdio: ["pipe", "pipe", "pipe"],
       env: { ...process.env },
-      shell: true,
     });
+
+    // Send prompt via stdin
+    child.stdin.write(prompt);
+    child.stdin.end();
 
     let stdout = "";
     let stderr = "";
-    child.stdout.on("data", (d) => {
-      stdout += d.toString();
-    });
-    child.stderr.on("data", (d) => {
-      stderr += d.toString();
-    });
+    child.stdout.on("data", (d) => { stdout += d.toString(); });
+    child.stderr.on("data", (d) => { stderr += d.toString(); });
 
     child.on("close", (code) => {
-      // Try to read output file first (more reliable than stdout parsing)
-      let output = "";
-      try { output = readFileSync(outFile, "utf-8").trim(); } catch (_) {}
-      cleanup(outFile);
+      console.log(`[listener] Codex exited (code=${code}, output=${stdout.length} chars)`);
+      if (stderr) console.log(`[listener] Codex stderr: ${stderr.slice(-300)}`);
+
       if (code !== 0 && code !== 1 && code !== null) {
         reject(new Error(`Codex exit ${code}: ${stderr.slice(-300)}`));
         return;
       }
-      resolve(output || stdout.trim());
+      resolve(stdout.trim());
     });
 
     child.on("error", (err) => {
-      cleanup(tmpFile);
       reject(err);
     });
   });
@@ -357,12 +348,6 @@ async function sendLong(channel, text) {
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
-}
-
-function cleanup(path) {
-  try {
-    unlinkSync(path);
-  } catch (_) {}
 }
 
 // ─── Error handling ──────────────────────────────────────────────
