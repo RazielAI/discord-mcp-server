@@ -99,8 +99,8 @@ npm install
 
 #### 🟢 簡単な方法（おすすめ）
 
-1. `config.toml` をテキストエディタで開く
-2. `discord_bot_token = ""` の `""` の中にステップ1のトークンを貼り付ける
+1. `config.toml.example` を `config.toml` にコピー（リネーム）する
+2. `config.toml` をテキストエディタで開き、`discord_bot_token = ""` の `""` の中にステップ1のトークンを貼り付ける
 3. **Windows:** `start.bat` をダブルクリック
 4. **Mac/Linux:** ターミナルで `./start.sh` を実行
 
@@ -136,7 +136,6 @@ node discord-listener.js
 | `BOT_SYSTEM_PROMPT` | AIの性格やルールをカスタマイズ |
 | `BOT_NAME` | Bot表示名 |
 | `MAX_HISTORY` | 会話の記憶数（デフォルト: 15メッセージ） |
-| `OWNER_ID` | オーナーのDiscord ID |
 
 #### カスタムプロンプト例
 

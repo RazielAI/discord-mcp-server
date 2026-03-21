@@ -35,15 +35,16 @@ Discord自动收到回复
 
 ## 所需条件
 
-### 1. 付费服务
+### 1. AI（选一个即可）
 
-| 服务 | 费用 | 用途 |
+| 服务 | 费用 | 备注 |
 |------|------|------|
-| [OpenAI API](https://platform.openai.com/) | 按量付费（约$5/月） | Codex CLI的大脑。GPT-4o生成回复 |
-| **或** [Anthropic API](https://console.anthropic.com/) | 按量付费（约$5/月） | Claude Code的大脑。Claude生成回复 |
+| [OpenAI Plus/Pro/Team](https://openai.com/) | $20+/月 | 已订阅的话，Codex CLI 直接可用 |
+| [OpenAI API](https://platform.openai.com/) | 按量付费（约$5/月） | 使用API密钥。无需订阅 |
+| [Anthropic API](https://console.anthropic.com/) | 按量付费（约$5/月） | Claude Code的大脑。Claude生成回复 |
 
-> 💡 这与ChatGPT Plus($20/月)或Claude Pro($20/月)的**订阅是分开的**。  
-> 你需要从各服务的开发者控制台获取API密钥。
+> 💡 **已订阅OpenAI Plus/Pro/Team的话**，无需API密钥即可使用Codex CLI。  
+> 首次使用时运行 `codex` 命令登录即可。
 
 ### 2. 需要安装的软件
 
@@ -124,7 +125,6 @@ node discord-listener.js
 | `BOT_SYSTEM_PROMPT` | 自定义AI的性格和规则 |
 | `BOT_NAME` | Bot显示名称 |
 | `MAX_HISTORY` | 对话记忆数（默认: 15条） |
-| `OWNER_ID` | 所有者的Discord ID |
 
 ### 步骤3B：MCP工具模式（从AI控制Discord）
 
@@ -239,7 +239,7 @@ A: 想在Discord聊天获得回复 → 监听模式。想从AI控制Discord → 
 A: Discord Bot免费。只付OpenAI API费用。普通对话约$5-10/月。用GPT-4o mini更便宜。
 
 **Q: 我订阅了ChatGPT Plus / Claude Pro，能用吗？**  
-A: 不能。订阅和API是分开的。需要从开发者控制台单独获取API密钥。
+A: **如果你有OpenAI Plus/Pro/Team订阅，Codex CLI可以直接使用。** 首次运行 `codex` 登录即可，无需API密钥。Anthropic（Claude Code）需要单独的API密钥。
 
 **Q: 支持Codex以外的AI吗？**  
 A: MCP模式支持所有MCP兼容AI（Claude Code、Cursor、Windsurf、Cline等）。监听模式默认用Codex CLI，但可通过 `CODEX_PATH` 指定其他工具。
@@ -261,7 +261,7 @@ A: 参见[保持持续运行](#保持持续运行守护进程化)。用pm2可以
 | Bot不响应@提及 | MESSAGE CONTENT INTENT未开启 | 在Developer Portal的Bot标签页启用 |
 | `Error: TOKEN_INVALID` | 令牌错误 | 在Developer Portal重新Reset Token |
 | `Missing Access` | Bot权限不足 | 重新生成OAuth2 URL并添加权限，重新邀请 |
-| 监听器正常但Codex报错 | API密钥未设置 | `export OPENAI_API_KEY="sk-..."` |
+| 监听器正常但Codex报错 | Codex未认证 | 运行 `codex` 登录，或设置API密钥 |
 
 ---
 

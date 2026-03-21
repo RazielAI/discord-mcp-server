@@ -35,15 +35,16 @@ Tell Codex or Claude Code "read #general" or "create a thread" and the AI operat
 
 ## Requirements
 
-### 1. Paid services
+### 1. AI (pick one)
 
-| Service | Cost | What for |
-|---------|------|----------|
-| [OpenAI API](https://platform.openai.com/) | Pay-as-you-go (~$5/mo) | The brain behind Codex CLI. GPT-4o generates responses |
-| **or** [Anthropic API](https://console.anthropic.com/) | Pay-as-you-go (~$5/mo) | The brain behind Claude Code. Claude generates responses |
+| Service | Cost | Notes |
+|---------|------|-------|
+| [OpenAI Plus/Pro/Team](https://openai.com/) | $20+/mo | If subscribed, Codex CLI works out of the box |
+| [OpenAI API](https://platform.openai.com/) | Pay-as-you-go (~$5/mo) | Use with API key. No subscription needed |
+| [Anthropic API](https://console.anthropic.com/) | Pay-as-you-go (~$5/mo) | The brain behind Claude Code. Claude generates responses |
 
-> 💡 This is **separate from** ChatGPT Plus ($20/mo) or Claude Pro ($20/mo) subscriptions.  
-> You need an API key from the developer console of each service.
+> 💡 **If you have an OpenAI Plus/Pro/Team subscription**, Codex CLI works without an API key.  
+> Just run `codex` to log in on first use.
 
 ### 2. Software to install
 
@@ -124,7 +125,6 @@ All optional except DISCORD_BOT_TOKEN.
 | `BOT_SYSTEM_PROMPT` | Customize AI personality and rules |
 | `BOT_NAME` | Bot display name |
 | `MAX_HISTORY` | Conversation memory (default: 15 messages) |
-| `OWNER_ID` | Owner's Discord ID |
 
 ### Step 3B: MCP Tool Mode (AI controls Discord)
 
@@ -245,7 +245,7 @@ A: Want chat replies in Discord → Listener. Want to control Discord from AI �
 A: Discord Bot is free. You only pay OpenAI API fees. Normal conversations cost ~$5-10/month. Use GPT-4o mini for even cheaper.
 
 **Q: I'm subscribed to ChatGPT Plus / Claude Pro. Can I use it?**  
-A: No. Subscriptions and API access are separate. You need an API key from the developer console.
+A: **If you have OpenAI Plus/Pro/Team, Codex CLI works out of the box.** Run `codex` once to authenticate. No API key needed. For Anthropic (Claude Code), you need a separate API key.
 
 **Q: Works with AI other than Codex?**  
 A: MCP mode works with any MCP-compatible AI (Claude Code, Cursor, Windsurf, Cline, etc.). Listener mode uses Codex CLI by default, but `CODEX_PATH` lets you use other CLI tools.
@@ -270,7 +270,7 @@ A: See [Keep it running](#keep-it-running-daemonize). pm2 auto-starts after rebo
 | Bot doesn't respond to mentions | MESSAGE CONTENT INTENT is off | Enable it in Developer Portal Bot tab |
 | `Error: TOKEN_INVALID` | Wrong token | Reset Token in Developer Portal |
 | `Missing Access` | Bot lacks permissions | Regenerate OAuth2 URL with permissions, re-invite |
-| Listener works but Codex errors | API key not set | `export OPENAI_API_KEY="sk-..."` |
+| Listener works but Codex errors | Codex not authenticated | Run `codex` once to log in, or set your API key |
 
 ---
 
